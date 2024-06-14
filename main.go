@@ -21,6 +21,8 @@ func main() {
 	signal.Notify(signalsChan, syscall.SIGINT, syscall.SIGTERM)
 
 	r := chi.NewRouter()
+	r.Get("/liveness", liveness)
+	r.Get("/readiness", readiness)
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: r,
@@ -40,4 +42,12 @@ func main() {
 
 	// wait for shutdown
 	<-shutdown
+}
+
+func liveness(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func readiness(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
