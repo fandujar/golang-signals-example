@@ -2,11 +2,14 @@ package main
 
 import (
 	// import go-chi v5
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -35,7 +38,9 @@ func main() {
 		s := <-signalsChan
 		fmt.Printf("signal received: %v\n", s)
 		// shutdown the server before exiting
-		server.Shutdown(nil)
+		shutdownCTX, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		server.Shutdown(shutdownCTX)
 		fmt.Println("server shutdown")
 		shutdown <- true
 	}()
@@ -45,9 +50,10 @@ func main() {
 }
 
 func liveness(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 func readiness(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	time.Sleep(1 * time.Second)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
